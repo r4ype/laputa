@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
   }
 
   // event loop
-  bool GameIsRunning = 1;
+  bool GameIsRunning = true;
   while (GameIsRunning) {
     SDL_Event event;
     // start our event loop
@@ -27,13 +27,13 @@ int main(int argc, char *argv[]) {
     while (SDL_PollEvent(&event)) {
       // handel each specific event
       if (event.type == SDL_QUIT) {
-        GameIsRunning = 0;
+        GameIsRunning = false;
       }
       // quit support with q
       if (event.type == SDL_KEYDOWN) {
         SDL_Keycode key = event.key.keysym.sym;
         if (key == SDLK_q)
-          GameIsRunning = 0;
+          GameIsRunning = false;
       }
     }
   }
