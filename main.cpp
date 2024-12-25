@@ -80,6 +80,9 @@ int main(int argc, char *argv[]) {
         break;
       }
     }
+    // update players possition
+    player_x += player_xvel;
+    player_y += player_yvel;
     // draw the player
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
