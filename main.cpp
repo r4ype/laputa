@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 
   int player_x = 0, player_y = 0;
   int player_xvel = 0, player_yvel = 0;
+  int PLAYER_SPEED = 4;
   // event loop
   bool GameIsRunning = true;
   while (GameIsRunning) {
@@ -48,16 +49,16 @@ int main(int argc, char *argv[]) {
       case SDL_KEYDOWN:
         switch (event.key.keysym.sym) {
         case SDLK_a:
-          player_xvel = -1;
+          player_xvel = -PLAYER_SPEED;
           break;
         case SDLK_d:
-          player_xvel = 1;
+          player_xvel = PLAYER_SPEED;
           break;
         case SDLK_w:
-          player_yvel = -1;
+          player_yvel = -PLAYER_SPEED;
           break;
         case SDLK_s:
-          player_yvel = 1;
+          player_yvel = PLAYER_SPEED;
           break;
         case SDLK_q:
           GameIsRunning = false;
