@@ -23,6 +23,12 @@ int main(int argc, char *argv[]) {
   // acceleration method") window | -1 for best driver |
   // SDL_RENDERER_ACCELERATED for gpu/hardware acceleration
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  SDL_RendererInfo info;
+  if (SDL_GetRendererInfo(renderer, &info) != 0) {
+    std::cerr << "SDL_GetRendererInfo Error: " << SDL_GetError() << std::endl;
+  } else {
+    std::cout << "Current GPU: " << info.name << std::endl;
+  }
 
   int player_x = 0, player_y = 0;
   int player_xvel = 0, player_yvel = 0;
