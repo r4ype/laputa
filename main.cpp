@@ -1,6 +1,13 @@
 // g++ main.cpp -o prog -lSDL2
 #include <SDL2/SDL.h>
 #include <iostream>
+
+class Character {
+    public :
+        //initialize character
+        int x,y,xvel,yvel,speed;
+};
+
 int main(int argc, char *argv[]) {
   // create a window data type
   SDL_Window *window = nullptr;
@@ -29,14 +36,6 @@ int main(int argc, char *argv[]) {
   } else {
     std::cout << "Current GPU: " << info.name << std::endl;
   }
-
-  class Character {
-  public:
-    int x, y;
-    int xvel, yvel;
-    int speed;
-  };
-
   Character pazu;
   pazu.x = 0;
   pazu.y = 0;
