@@ -3,12 +3,28 @@
 #include <iostream>
 
 class Character {
-    public :
-        //initialize character
-        int x,y,xvel,yvel,speed;
-};
+private:
+  // initialize character
+  int x = 0, y = 0, xvel = 0, yvel = 0;
 
+  void init(int x, int y, int xvel, int yvel) {
+    this->x = x;
+    this->y = y;
+    this->xvel = xvel;
+    this->yvel = yvel;
+  }
+
+  void moveLeft() { this->x = this->x - this->xvel; }
+  void moveRight() { this->x = this->x + this->xvel; }
+
+  void stopMove() {
+    if (this->!= 0)
+      this->xvel = 0;
+  }
+};
+}
 int main(int argc, char *argv[]) {
+  Character pazu;
   // create a window data type
   SDL_Window *window = nullptr;
   SDL_Renderer *renderer = nullptr;
@@ -36,12 +52,7 @@ int main(int argc, char *argv[]) {
   } else {
     std::cout << "Current GPU: " << info.name << std::endl;
   }
-  Character pazu;
-  pazu.x = 0;
-  pazu.y = 0;
-  pazu.xvel = 0;
-  pazu.yvel = 0;
-  pazu.speed = 3;
+  pazu.init(0, 0, 0, 0, 3);
   // event loop
   bool GameIsRunning = true;
   while (GameIsRunning) {
@@ -58,16 +69,10 @@ int main(int argc, char *argv[]) {
       case SDL_KEYDOWN:
         switch (event.key.keysym.sym) {
         case SDLK_a:
-          pazu.xvel = -pazu.speed;
+          pazu.moveLeft();
           break;
         case SDLK_d:
-          pazu.xvel = pazu.speed;
-          break;
-        case SDLK_w:
-          pazu.yvel = -pazu.speed;
-          break;
-        case SDLK_s:
-          pazu.yvel = pazu.speed;
+          pazu.moveRight();
           break;
         case SDLK_q:
           GameIsRunning = false;
@@ -77,28 +82,16 @@ int main(int argc, char *argv[]) {
       case SDL_KEYUP:
         switch (event.key.keysym.sym) {
         case SDLK_a:
-          if (pazu.xvel < 0)
-            pazu.xvel = 0;
+          pazu.stopMove();
           break;
         case SDLK_d:
-          if (pazu.xvel > 0)
-            pazu.xvel = 0;
-          break;
-        case SDLK_w:
-          if (pazu.yvel < 0)
-            pazu.yvel = 0;
-          break;
-        case SDLK_s:
-          if (pazu.yvel > 0)
-            pazu.yvel = 0;
+          pazu.stopMove();
           break;
         }
         break;
       }
     }
     // update players possition
-    pazu.x += pazu.xvel;
-    pazu.y += pazu.yvel;
     // draw the player
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
