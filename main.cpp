@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-
 #include <iostream>
 
 struct position {
@@ -7,20 +6,20 @@ struct position {
 };
 
 class Character {
-   private:
-    position p1 = {0};
-
-   public:
-    void init(int startX, int startY, int velocityX, int velocityY) {
-        p1.x = startX;
-        p1.y = startY;
-        p1.xvel = velocityX;
-        p1.yvel = velocityY;
-    }
-    void MoveCharacter(char direction);
-    void SetCharacterPosition(position player);
-    void SetCharacterSpeed(position player);
-    position GetCharacterPosition();
+    private:
+        position p1 = {0};
+    public:
+        void init(int startX, int startY, int velocityX, int velocityY) {
+            p1.x = startX;
+            p1.y = startY;
+            p1.xvel = velocityX;
+            p1.yvel = velocityY;
+        }
+        void MoveCharacter(char direction);
+        void SetCharacterPosition(position player);
+        void SetCharacterSpeed(position player);
+        position GetCharacterPosition();
+        void UpdatePosition(bool keys[4]);
 };
 
 void Character::MoveCharacter(char direction) {
@@ -54,40 +53,46 @@ void Character::SetCharacterPosition(position player) {
     }
 }
 
-position Character::GetCharacterPosition() { return p1; }
+position Character::GetCharacterPosition() {
+    return p1;
+}
+
+void Character::UpdatePosition(bool keys[4]) {
+    if (keys[0]) p1.x -= p1.xvel; // left
+    if (keys[1]) p1.x += p1.xvel; // right
+    if (keys[2]) p1.y -= p1.yvel; // up
+    if (keys[3]) p1.y += p1.yvel; // down
+}
 
 int main(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "SDL initialization failed: " << SDL_GetError()
-                  << std::endl;
+        std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
         return -1;
     }
 
-    SDL_Window* window =
-        SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_UNDEFINED,
-                         SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_UNDEFINED,
+                                          SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
         SDL_Quit();
         return -1;
     }
 
-    SDL_Renderer* renderer =
-        SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
-        std::cerr << "Failed to create renderer: " << SDL_GetError()
-                  << std::endl;
+        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
     }
 
     Character pazu;
-    pazu.init(0, 0, 2, 2);  // Changed initial velocities to 2 for movement
+    pazu.init(0, 0, 2, 2);
     position Now;
 
     bool gameIsRunning = true;
     SDL_Event event;
+    bool keys[4] = {false, false, false, false}; // left, right, up, down
 
     while (gameIsRunning) {
         while (SDL_PollEvent(&event)) {
@@ -98,24 +103,46 @@ int main(int argc, char* argv[]) {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
                         case SDLK_a:
-                            pazu.MoveCharacter('l');
+                            keys[1] = false;
+                            keys[0] = true;
                             break;
                         case SDLK_d:
-                            pazu.MoveCharacter('r');
+                            keys[0] = false;
+                            keys[1] = true;
                             break;
                         case SDLK_w:
-                            pazu.MoveCharacter('u');
+                            keys[3] = false;
+                            keys[2] = true;
                             break;
                         case SDLK_s:
-                            pazu.MoveCharacter('d');
+                            keys[2] = false;
+                            keys[3] = true;
                             break;
                         case SDLK_q:
                             gameIsRunning = false;
                             break;
                     }
                     break;
+                case SDL_KEYUP:
+                    switch (event.key.keysym.sym) {
+                        case SDLK_a:
+                            keys[0] = false;
+                            break;
+                        case SDLK_d:
+                            keys[1] = false;
+                            break;
+                        case SDLK_w:
+                            keys[2] = false;
+                            break;
+                        case SDLK_s:
+                            keys[3] = false;
+                            break;
+                    }
+                    break;
             }
         }
+
+        pazu.UpdatePosition(keys);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -135,4 +162,4 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
     return 0;
 }
-// lazygit test
+
