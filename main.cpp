@@ -19,7 +19,7 @@ class Character {
         void SetCharacterPosition(position player);
         void SetCharacterSpeed(position player);
         position GetCharacterPosition();
-        void UpdatePosition(bool keys[4]);
+        void UpdatePosition(bool keys[4][2]);
 };
 
 void Character::MoveCharacter(char direction) {
@@ -57,11 +57,11 @@ position Character::GetCharacterPosition() {
     return p1;
 }
 
-void Character::UpdatePosition(bool keys[4]) {
-    if (keys[0]) p1.x -= p1.xvel; // left
-    if (keys[1]) p1.x += p1.xvel; // right
-    if (keys[2]) p1.y -= p1.yvel; // up
-    if (keys[3]) p1.y += p1.yvel; // down
+void Character::UpdatePosition(bool keys[4][2]) {
+    if (keys[0][0] && keys[0][1]) p1.x -= p1.xvel; // left
+    if (keys[1][0] && keys[1][1]) p1.x += p1.xvel; // right
+    if (keys[2][0] && keys[2][1]) p1.y -= p1.yvel; // up
+    if (keys[3][0] && keys[3][1]) p1.y += p1.yvel; // down
 }
 
 int main(int argc, char* argv[]) {
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
 
     bool gameIsRunning = true;
     SDL_Event event;
-    bool keys[4] = {false, false, false, false}; // left, right, up, down
+    bool keys[4][2] = {{false, true},{false, true},{false, true},{false, true}}; // left, right, up, down
 
     while (gameIsRunning) {
         while (SDL_PollEvent(&event)) {
@@ -103,20 +103,20 @@ int main(int argc, char* argv[]) {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
                         case SDLK_a:
-                            keys[1] = false;
-                            keys[0] = true;
+                            keys[1][1] = false;
+                            keys[0][0] = true;
                             break;
                         case SDLK_d:
-                            keys[0] = false;
-                            keys[1] = true;
+                            keys[0][1] = false;
+                            keys[1][0] = true;
                             break;
                         case SDLK_w:
-                            keys[3] = false;
-                            keys[2] = true;
+                            keys[3][1] = false;
+                            keys[2][0] = true;
                             break;
                         case SDLK_s:
-                            keys[2] = false;
-                            keys[3] = true;
+                            keys[2][1] = false;
+                            keys[3][0] = true;
                             break;
                         case SDLK_q:
                             gameIsRunning = false;
@@ -126,16 +126,20 @@ int main(int argc, char* argv[]) {
                 case SDL_KEYUP:
                     switch (event.key.keysym.sym) {
                         case SDLK_a:
-                            keys[0] = false;
+                            keys[0][0] = false;
+                            keys[1][1] = true;
                             break;
                         case SDLK_d:
-                            keys[1] = false;
+                            keys[1][0] = false;
+                            keys[0][1] = true;
                             break;
                         case SDLK_w:
-                            keys[2] = false;
+                            keys[2][0] = false;
+                            keys[3][1] = true;
                             break;
                         case SDLK_s:
-                            keys[3] = false;
+                            keys[3][0] = false;
+                            keys[2][1] = true;
                             break;
                     }
                     break;
