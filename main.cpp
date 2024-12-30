@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+
 #include <iostream>
 
 struct position {
@@ -6,38 +7,21 @@ struct position {
 };
 
 class Character {
-    private:
-        position p1 = {0};
-    public:
-        void init(int startX, int startY, int velocityX, int velocityY) {
-            p1.x = startX;
-            p1.y = startY;
-            p1.xvel = velocityX;
-            p1.yvel = velocityY;
-        }
-        void MoveCharacter(char direction);
-        void SetCharacterPosition(position player);
-        void SetCharacterSpeed(position player);
-        position GetCharacterPosition();
-        void UpdatePosition(bool keys[4][2]);
-};
+   private:
+    position p1 = {0};
 
-void Character::MoveCharacter(char direction) {
-    switch (direction) {
-        case 'l':
-            p1.x -= p1.xvel;
-            break;
-        case 'r':
-            p1.x += p1.xvel;
-            break;
-        case 'u':
-            p1.y -= p1.yvel;
-            break;
-        case 'd':
-            p1.y += p1.yvel;
-            break;
+   public:
+    void init(int startX, int startY, int velocityX, int velocityY) {
+        p1.x = startX;
+        p1.y = startY;
+        p1.xvel = velocityX;
+        p1.yvel = velocityY;
     }
-}
+    void SetCharacterPosition(position player);
+    void SetCharacterSpeed(position player);
+    position GetCharacterPosition();
+    void UpdatePosition(bool keys[4][2]);
+};
 
 void Character::SetCharacterSpeed(position player) {
     p1.xvel = player.xvel;
@@ -53,34 +37,36 @@ void Character::SetCharacterPosition(position player) {
     }
 }
 
-position Character::GetCharacterPosition() {
-    return p1;
-}
+position Character::GetCharacterPosition() { return p1; }
 
 void Character::UpdatePosition(bool keys[4][2]) {
-    if (keys[0][0] && keys[0][1]) p1.x -= p1.xvel; // left
-    if (keys[1][0] && keys[1][1]) p1.x += p1.xvel; // right
-    if (keys[2][0] && keys[2][1]) p1.y -= p1.yvel; // up
-    if (keys[3][0] && keys[3][1]) p1.y += p1.yvel; // down
+    if (keys[0][0] && keys[0][1]) p1.x -= p1.xvel;  // left
+    if (keys[1][0] && keys[1][1]) p1.x += p1.xvel;  // right
+    if (keys[2][0] && keys[2][1]) p1.y -= p1.yvel;  // up
+    if (keys[3][0] && keys[3][1]) p1.y += p1.yvel;  // down
 }
 
 int main(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL initialization failed: " << SDL_GetError()
+                  << std::endl;
         return -1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+    SDL_Window* window =
+        SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_UNDEFINED,
+                         SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
         SDL_Quit();
         return -1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer =
+        SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
-        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to create renderer: " << SDL_GetError()
+                  << std::endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
@@ -92,7 +78,10 @@ int main(int argc, char* argv[]) {
 
     bool gameIsRunning = true;
     SDL_Event event;
-    bool keys[4][2] = {{false, true},{false, true},{false, true},{false, true}}; // left, right, up, down
+    bool keys[4][2] = {{false, true},
+                       {false, true},
+                       {false, true},
+                       {false, true}};  // left, right, up, down
 
     while (gameIsRunning) {
         while (SDL_PollEvent(&event)) {
@@ -166,4 +155,3 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
     return 0;
 }
-
