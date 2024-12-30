@@ -1,33 +1,61 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 
+struct position {
+    int x,y,xvel,yvel;
+};
+
 class Character {
-   public:
-    int x = 0, y = 0, xvel = 0, yvel = 0, speed = 3;
+    private :
+        position p1 = {0};
+    public:
 
     void init(int startX, int startY, int velocityX, int velocityY) {
-        x = startX;
-        y = startY;
-        xvel = velocityX;
-        yvel = velocityY;
+        p1.x = startX;
+        p1.y = startY;
+        p1.xvel = velocityX;
+        p1.yvel = velocityY;
     }
-
-    void moveLeft() { xvel = -speed; }
-    void moveRight() { xvel = speed; }
-    void moveUp() { yvel = -speed; }
-    void moveDown() { yvel = speed; }
-    void stopHorizontalMovement() { xvel = 0; }
-    void stopVerticalMovement() { yvel = 0; }
-
-    void updatePosition() {
-        x += xvel;
-        y += yvel;
-        if (x < 0) x = 0;
-        if (x > 640 - 50) x = 640 - 50;
-        if (y < 0) y = 0;
-        if (y > 480 - 50) y = 480 - 50;
-    }
+    void MoveCharacter(char direction);
+    void SetCharacterPosition(position player);
+    void SetCharacterSpeed(position player);
+    position GetCharacterPosition();
 };
+
+void Character::MoveCharacter(char direction){
+    switch (direction) {
+        case 'l' :
+            p1.x -= p1.xvel;
+            break;
+        case 'r' :
+            p1.x += p1.xvel;
+            break;
+        case 'u' :
+            p1.y -= p1.yvel;
+            break;
+        case 'd' :
+            p1.y += p1.yvel;
+            break;
+    }
+}
+
+void Character::SetCharacterSpeed(position player){
+    p1.xvel = player.xvel;
+    p1.yvel = player.yvel;
+}
+
+void Character::SetCharacterPosition(position player){
+    if (p1.x + player.x > 0 && p1.x + player.x < 640){
+        p1.x += player.x;
+    }
+    if (p1.y + player.y > 0 && p1.y + player.y < 480){
+        p1.y += player.y;
+    }
+}
+
+position Character::GetCharacterPosition(){
+    return p1;
+}
 
 int main(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -52,7 +80,8 @@ int main(int argc, char* argv[]) {
     }
 
     Character pazu;
-    pazu.init(0, 0, 0, 0);
+    pazu.init(0, 0, 2, 2); // Changed initial velocities to 2 for movement
+    position Now;
 
     bool gameIsRunning = true;
     SDL_Event event;
@@ -66,44 +95,31 @@ int main(int argc, char* argv[]) {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
                         case SDLK_a:
-                            pazu.moveLeft();
+                            pazu.MoveCharacter('l');
                             break;
                         case SDLK_d:
-                            pazu.moveRight();
+                            pazu.MoveCharacter('r');
                             break;
                         case SDLK_w:
-                            pazu.moveUp();
+                            pazu.MoveCharacter('u');
                             break;
                         case SDLK_s:
-                            pazu.moveDown();
+                            pazu.MoveCharacter('d');
                             break;
                         case SDLK_q:
                             gameIsRunning = false;
                             break;
                     }
                     break;
-                case SDL_KEYUP:
-                    switch (event.key.keysym.sym) {
-                        case SDLK_a:
-                        case SDLK_d:
-                            pazu.stopHorizontalMovement();
-                            break;
-                        case SDLK_w:
-                        case SDLK_s:
-                            pazu.stopVerticalMovement();
-                            break;
-                    }
-                    break;
             }
         }
-
-        pazu.updatePosition();
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_Rect shape = {pazu.x, pazu.y, 50, 50};
+        Now = pazu.GetCharacterPosition();
+        SDL_Rect shape = {Now.x, Now.y, 50, 50};
         SDL_RenderFillRect(renderer, &shape);
 
         SDL_RenderPresent(renderer);
@@ -116,3 +132,4 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
     return 0;
 }
+
