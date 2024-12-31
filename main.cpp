@@ -15,7 +15,6 @@ class Character {
             p1.xvel = velocityX;
             p1.yvel = velocityY;
         }
-        void SetCharacterPosition(position player);
         void SetCharacterSpeed(position player);
         position GetCharacterPosition();
         void UpdatePosition(bool keys[4][2]);
@@ -25,14 +24,6 @@ void Character::SetCharacterSpeed(position player) {
     p1.yvel = player.yvel;
 }
 
-void Character::SetCharacterPosition(position player) {
-    if (p1.x + player.x > 0 && p1.x + player.x < 640) {
-        p1.x += player.x;
-    }
-    if (p1.y + player.y > 0 && p1.y + player.y < 480) {
-        p1.y += player.y;
-    }
-}
 
 position Character::GetCharacterPosition() {
     return p1;
