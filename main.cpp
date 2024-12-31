@@ -6,18 +6,20 @@ struct position {
 };
 
 class Character {
-    private:
-        position p1 = {0};
-    public:
-        void init(int startX, int startY, int velocityX, int velocityY) {
-            p1.x = startX;
-            p1.y = startY;
-            p1.xvel = velocityX;
-            p1.yvel = velocityY;
-        }
-        void SetCharacterSpeed(position player);
-        position GetCharacterPosition();
-        void UpdatePosition(bool keys[4][2]);
+
+private:
+    position p1 = {0};
+
+public:
+    void init(int startX, int startY, int velocityX, int velocityY) {
+        p1.x = startX;
+        p1.y = startY;
+        p1.xvel = velocityX;
+        p1.yvel = velocityY;
+    }
+    void SetCharacterSpeed(position player);
+    position GetCharacterPosition();
+    void UpdatePosition(bool keys[4][2]);
 };
 void Character::SetCharacterSpeed(position player) {
     p1.xvel = player.xvel;
@@ -35,15 +37,57 @@ void Character::UpdatePosition(bool keys[4][2]) {
     if (keys[2][0] && keys[2][1]) p1.y -= p1.yvel; // up
     if (keys[3][0] && keys[3][1]) p1.y += p1.yvel; // down
 }
+//////////////////////////////////////////////////////////////
+
+class Window {
+
+private : 
+    int width ,height;
+
+public :
+    void init(int widthScreen, int heightScreen){
+        width = widthScreen;height = heightScreen;
+    }
+    void DrawGrid(SDL_Renderer*);
+};
+void Window::DrawGrid(SDL_Renderer* renderer){
+    SDL_SetRenderDrawColor(renderer,255,255,255,255);
+    for(int i = 0;i < width;i += (width/10)){
+        SDL_RenderDrawLine(renderer,i,0,i,height);
+    }
+    for(int i = 0;i < height;i += (height/10)){
+        SDL_RenderDrawLine(renderer,0,i,width,i);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[]) {
+    const int width = 640, height= 480;
+    Window MainWindow;
+    MainWindow.init(width,height);
+
+
+
+
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
         return -1;
     }
 
     SDL_Window* window = SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN);
+                                          SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -125,7 +169,8 @@ int main(int argc, char* argv[]) {
 
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         Now = pazu.GetCharacterPosition();
-        SDL_Rect shape = {Now.x, Now.y, 50, 50};
+        SDL_Rect shape = {Now.x, Now.y, width/10, height/10};
+        MainWindow.DrawGrid(renderer);
         SDL_RenderFillRect(renderer, &shape);
 
         SDL_RenderPresent(renderer);
