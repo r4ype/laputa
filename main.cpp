@@ -15,30 +15,11 @@ class Character {
             p1.xvel = velocityX;
             p1.yvel = velocityY;
         }
-        void MoveCharacter(char direction);
         void SetCharacterPosition(position player);
         void SetCharacterSpeed(position player);
         position GetCharacterPosition();
         void UpdatePosition(bool keys[4][2]);
 };
-
-void Character::MoveCharacter(char direction) {
-    switch (direction) {
-        case 'l':
-            p1.x -= p1.xvel;
-            break;
-        case 'r':
-            p1.x += p1.xvel;
-            break;
-        case 'u':
-            p1.y -= p1.yvel;
-            break;
-        case 'd':
-            p1.y += p1.yvel;
-            break;
-    }
-}
-
 void Character::SetCharacterSpeed(position player) {
     p1.xvel = player.xvel;
     p1.yvel = player.yvel;
