@@ -1,12 +1,17 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 
+const int width = 640;
+const int height = 480;
+const int gridSize = 10;
+const int CELL_WIDTH = width / gridSize;
+const int CELL_HEIGHT = height / gridSize;
+
 struct position {
     int x, y, xvel, yvel;
 };
-
+/////////////////////////////////////////////////////////
 class Character {
-
 private:
     position p1 = {0};
 
@@ -19,67 +24,51 @@ public:
     }
     void SetCharacterSpeed(position player);
     position GetCharacterPosition();
-    void UpdatePosition(bool keys[4][2]);
+    void UpdatePosition(bool keys[4]);
 };
+
 void Character::SetCharacterSpeed(position player) {
     p1.xvel = player.xvel;
     p1.yvel = player.yvel;
 }
 
-
 position Character::GetCharacterPosition() {
     return p1;
 }
 
-void Character::UpdatePosition(bool keys[4][2]) {
-    if (keys[0][0] && keys[0][1]) p1.x -= p1.xvel; // left
-    if (keys[1][0] && keys[1][1]) p1.x += p1.xvel; // right
-    if (keys[2][0] && keys[2][1]) p1.y -= p1.yvel; // up
-    if (keys[3][0] && keys[3][1]) p1.y += p1.yvel; // down
+void Character::UpdatePosition(bool keys[4]) {
+    if (keys[0] && p1.x - CELL_WIDTH >= 0) p1.x -= CELL_WIDTH;  // left
+    if (keys[1] && p1.x + CELL_WIDTH < width) p1.x += CELL_WIDTH;  // right
+    if (keys[2] && p1.y - CELL_HEIGHT >= 0) p1.y -= CELL_HEIGHT; // up
+    if (keys[3] && p1.y + CELL_HEIGHT < height) p1.y += CELL_HEIGHT; // down
 }
-//////////////////////////////////////////////////////////////
-
+//////////////////////////////////////////////////
 class Window {
+private: 
+    int width, height;
 
-private : 
-    int width ,height;
-
-public :
-    void init(int widthScreen, int heightScreen){
-        width = widthScreen;height = heightScreen;
+public:
+    void init(int widthScreen, int heightScreen) {
+        width = widthScreen; height = heightScreen;
     }
     void DrawGrid(SDL_Renderer*);
 };
-void Window::DrawGrid(SDL_Renderer* renderer){
-    SDL_SetRenderDrawColor(renderer,255,255,255,255);
-    for(int i = 0;i < width;i += (width/10)){
-        SDL_RenderDrawLine(renderer,i,0,i,height);
+
+void Window::DrawGrid(SDL_Renderer* renderer) {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    for (int i = 0; i < width; i += CELL_WIDTH) {
+        SDL_RenderDrawLine(renderer, i, 0, i, height);
     }
-    for(int i = 0;i < height;i += (height/10)){
-        SDL_RenderDrawLine(renderer,0,i,width,i);
+    for (int i = 0; i < height; i += CELL_HEIGHT) {
+        SDL_RenderDrawLine(renderer, 0, i, width, i);
     }
+    SDL_RenderDrawLine(renderer, width - 1, 0, width - 1, height);
+    SDL_RenderDrawLine(renderer, 0, height - 1, width, height - 1);
 }
-
-
-
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
-    const int width = 640, height= 480;
     Window MainWindow;
-    MainWindow.init(width,height);
-
-
-
-
+    MainWindow.init(width, height);
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
@@ -103,12 +92,12 @@ int main(int argc, char* argv[]) {
     }
 
     Character pazu;
-    pazu.init(0, 0, 2, 2);
+    pazu.init(0, 0, CELL_WIDTH, CELL_HEIGHT);
     position Now;
 
     bool gameIsRunning = true;
     SDL_Event event;
-    bool keys[4][2] = {{false, true},{false, true},{false, true},{false, true}}; // left, right, up, down
+    bool keys[4] = {false, false, false, false}; // left, right, up, down
 
     while (gameIsRunning) {
         while (SDL_PollEvent(&event)) {
@@ -119,20 +108,16 @@ int main(int argc, char* argv[]) {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym) {
                         case SDLK_a:
-                            keys[1][1] = false;
-                            keys[0][0] = true;
+                            keys[0] = true;
                             break;
                         case SDLK_d:
-                            keys[0][1] = false;
-                            keys[1][0] = true;
+                            keys[1] = true;
                             break;
                         case SDLK_w:
-                            keys[3][1] = false;
-                            keys[2][0] = true;
+                            keys[2] = true;
                             break;
                         case SDLK_s:
-                            keys[2][1] = false;
-                            keys[3][0] = true;
+                            keys[3] = true;
                             break;
                         case SDLK_q:
                             gameIsRunning = false;
@@ -142,20 +127,16 @@ int main(int argc, char* argv[]) {
                 case SDL_KEYUP:
                     switch (event.key.keysym.sym) {
                         case SDLK_a:
-                            keys[0][0] = false;
-                            keys[1][1] = true;
+                            keys[0] = false;
                             break;
                         case SDLK_d:
-                            keys[1][0] = false;
-                            keys[0][1] = true;
+                            keys[1] = false;
                             break;
                         case SDLK_w:
-                            keys[2][0] = false;
-                            keys[3][1] = true;
+                            keys[2] = false;
                             break;
                         case SDLK_s:
-                            keys[3][0] = false;
-                            keys[2][1] = true;
+                            keys[3] = false;
                             break;
                     }
                     break;
@@ -169,13 +150,13 @@ int main(int argc, char* argv[]) {
 
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         Now = pazu.GetCharacterPosition();
-        SDL_Rect shape = {Now.x, Now.y, width/10, height/10};
+        SDL_Rect shape = {Now.x, Now.y, CELL_WIDTH, CELL_HEIGHT};
         MainWindow.DrawGrid(renderer);
         SDL_RenderFillRect(renderer, &shape);
 
         SDL_RenderPresent(renderer);
 
-        SDL_Delay(16);
+        SDL_Delay(100);
     }
 
     SDL_DestroyRenderer(renderer);
