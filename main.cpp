@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include <iostream>
 
@@ -84,6 +85,7 @@ int main(int argc, char* argv[]) {
                                           height, SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
+        IMG_Quit();
         SDL_Quit();
         return -1;
     }
@@ -94,9 +96,12 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to create renderer: " << SDL_GetError()
                   << std::endl;
         SDL_DestroyWindow(window);
+        IMG_Quit();
         SDL_Quit();
         return -1;
     }
+
+    SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "assets/player.png");
 
     Character pazu;
     pazu.init(0, 0, CELL_WIDTH, CELL_HEIGHT);
@@ -155,19 +160,20 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         Now = pazu.GetCharacterPosition();
-        SDL_Rect shape = {Now.x, Now.y, CELL_WIDTH, CELL_HEIGHT};
+        SDL_Rect destRect = {Now.x, Now.y, CELL_WIDTH, CELL_HEIGHT};
         MainWindow.DrawGrid(renderer);
-        SDL_RenderFillRect(renderer, &shape);
+        SDL_RenderCopy(renderer, playerTexture, NULL, &destRect);
 
         SDL_RenderPresent(renderer);
 
         SDL_Delay(100);
     }
 
+    SDL_DestroyTexture(playerTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    IMG_Quit();
     SDL_Quit();
     return 0;
 }
