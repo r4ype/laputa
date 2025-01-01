@@ -1,9 +1,13 @@
 #include <SDL2/SDL.h>
+
 #include <iostream>
 
-const int width = 640;
-const int height = 480;
-const int gridSize = 10;
+#define windowSizeWidth 640
+#define windowSizeHeight 480
+
+const int gridSize = 15;
+const int width = windowSizeWidth - (windowSizeWidth % gridSize);
+const int height = windowSizeHeight - (windowSizeHeight % gridSize);
 const int CELL_WIDTH = width / gridSize;
 const int CELL_HEIGHT = height / gridSize;
 
@@ -12,10 +16,10 @@ struct position {
 };
 /////////////////////////////////////////////////////////
 class Character {
-private:
+   private:
     position p1 = {0};
 
-public:
+   public:
     void init(int startX, int startY, int velocityX, int velocityY) {
         p1.x = startX;
         p1.y = startY;
@@ -32,24 +36,23 @@ void Character::SetCharacterSpeed(position player) {
     p1.yvel = player.yvel;
 }
 
-position Character::GetCharacterPosition() {
-    return p1;
-}
+position Character::GetCharacterPosition() { return p1; }
 
 void Character::UpdatePosition(bool keys[4]) {
-    if (keys[0] && p1.x - CELL_WIDTH >= 0) p1.x -= CELL_WIDTH;  // left
-    if (keys[1] && p1.x + CELL_WIDTH < width) p1.x += CELL_WIDTH;  // right
-    if (keys[2] && p1.y - CELL_HEIGHT >= 0) p1.y -= CELL_HEIGHT; // up
-    if (keys[3] && p1.y + CELL_HEIGHT < height) p1.y += CELL_HEIGHT; // down
+    if (keys[0] && p1.x - CELL_WIDTH >= 0) p1.x -= CELL_WIDTH;        // left
+    if (keys[1] && p1.x + CELL_WIDTH < width) p1.x += CELL_WIDTH;     // right
+    if (keys[2] && p1.y - CELL_HEIGHT >= 0) p1.y -= CELL_HEIGHT;      // up
+    if (keys[3] && p1.y + CELL_HEIGHT < height) p1.y += CELL_HEIGHT;  // down
 }
 //////////////////////////////////////////////////
 class Window {
-private: 
+   private:
     int width, height;
 
-public:
+   public:
     void init(int widthScreen, int heightScreen) {
-        width = widthScreen; height = heightScreen;
+        width = widthScreen;
+        height = heightScreen;
     }
     void DrawGrid(SDL_Renderer*);
 };
@@ -71,21 +74,25 @@ int main(int argc, char* argv[]) {
     MainWindow.init(width, height);
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL initialization failed: " << SDL_GetError()
+                  << std::endl;
         return -1;
     }
 
     SDL_Window* window = SDL_CreateWindow("SDL2 Game", SDL_WINDOWPOS_UNDEFINED,
-                                          SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
+                                          SDL_WINDOWPOS_UNDEFINED, width,
+                                          height, SDL_WINDOW_SHOWN);
     if (!window) {
         std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
         SDL_Quit();
         return -1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer =
+        SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
-        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to create renderer: " << SDL_GetError()
+                  << std::endl;
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
@@ -97,7 +104,7 @@ int main(int argc, char* argv[]) {
 
     bool gameIsRunning = true;
     SDL_Event event;
-    bool keys[4] = {false, false, false, false}; // left, right, up, down
+    bool keys[4] = {false, false, false, false};  // left, right, up, down
 
     while (gameIsRunning) {
         while (SDL_PollEvent(&event)) {
@@ -164,4 +171,3 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
     return 0;
 }
-
