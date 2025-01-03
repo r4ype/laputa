@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 #define windowSizeWidth 640
 #define windowSizeHeight 480
@@ -82,7 +82,7 @@ class Window {
 };
 
 void Window::DrawGrid(SDL_Renderer* renderer) {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 251, 173, 1);
     for (int i = 0; i < width; i += CELL_WIDTH) {
         SDL_RenderDrawLine(renderer, i, 0, i, height);
     }
@@ -94,12 +94,14 @@ void Window::DrawGrid(SDL_Renderer* renderer) {
         for (int x = 0; x < gridSize; ++x) {
             if (board[x][y] == 1) {  // Draw active cells
                 SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT};
+                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH,
+                                 CELL_HEIGHT};
                 SDL_RenderFillRect(renderer, &cell);
             }
             if (board[x][y] == 2) {
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0 , 0);
-                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT};
+                SDL_SetRenderDrawColor(renderer, 250, 94, 173, 1);
+                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH,
+                                 CELL_HEIGHT};
                 SDL_RenderFillRect(renderer, &cell);
             }
         }
@@ -110,19 +112,19 @@ void Window::DrawGrid(SDL_Renderer* renderer) {
 int main(int argc, char* argv[]) {
     std::fill(&board[0][0], &board[0][0] + sizeof(board) / sizeof(int), 0);
 
-    //draw wall for now should be in window class !!!
-    for(int i = 1 ; i < gridSize-2;i += 2)
-        for(int j = 1 ; j < gridSize-1;j += 2)
-            board[i][j] = 2;
-
+    // draw wall for now should be in window class !!!
+    for (int i = 1; i < gridSize - 2; i += 2)
+        for (int j = 1; j < gridSize - 1; j += 2) board[i][j] = 2;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL initialization failed: " << SDL_GetError()
+                  << std::endl;
         return -1;
     }
 
     if (IMG_Init(IMG_INIT_PNG) == 0) {
-        std::cerr << "SDL_image initialization failed: " << IMG_GetError() << std::endl;
+        std::cerr << "SDL_image initialization failed: " << IMG_GetError()
+                  << std::endl;
         SDL_Quit();
         return -1;
     }
@@ -137,9 +139,11 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer =
+        SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
-        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to create renderer: " << SDL_GetError()
+                  << std::endl;
         SDL_DestroyWindow(window);
         IMG_Quit();
         SDL_Quit();
@@ -217,7 +221,7 @@ int main(int argc, char* argv[]) {
 
         pazu.UpdatePosition(keys);
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 30, 30, 46, 1);
         SDL_RenderClear(renderer);
 
         Now = pazu.GetCharacterPosition();
@@ -238,4 +242,3 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
     return 0;
 }
-
