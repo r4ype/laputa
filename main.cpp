@@ -89,7 +89,8 @@ void Window::DrawGrid(SDL_Renderer* renderer) {
     for (int i = 0; i < height; i += CELL_HEIGHT) {
         SDL_RenderDrawLine(renderer, 0, i, width, i);
     }
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawLine(renderer, 0, height-1, width-1, height-1);
+    SDL_RenderDrawLine(renderer, width-1, 0, width-1, height-1);
     for (int y = 0; y < gridSize; ++y) {
         for (int x = 0; x < gridSize; ++x) {
             if (board[x][y] == 1) {  // Draw active cells
