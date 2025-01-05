@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <cmath>
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 #define windowSizeWidth 640
@@ -80,11 +80,11 @@ class Window {
         width = widthScreen;
         height = heightScreen;
     }
-    void DrawGrid(SDL_Renderer* renderer,position player,int VisionRadios);
-    void Shadow(SDL_Renderer* renderer,position player,position object,int VisionRadios);
+    void DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios);
 };
 
-void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios) {
+void Window::DrawGrid(SDL_Renderer* renderer, position player,
+                      int VisionRadios) {
     // Convert player's position to grid coordinates
     int playerGridX = player.x / CELL_WIDTH;
     int playerGridY = player.y / CELL_HEIGHT;
@@ -96,46 +96,52 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
     int endY = std::min(gridSize, playerGridY + VisionRadios + 1);
 
     // Set grid line color
-    SDL_SetRenderDrawColor(renderer, 0, 251, 173, 255); // Use correct alpha value (255 for opaque)
+    SDL_SetRenderDrawColor(renderer, 0, 251, 173,
+                           255);  // Use correct alpha value (255 for opaque)
 
     // Draw vertical grid lines within the visibility radius
     for (int x = startX; x <= endX; x++) {
         int xPos = x * CELL_WIDTH;
-        SDL_RenderDrawLine(renderer, xPos, startY * CELL_HEIGHT, xPos, endY * CELL_HEIGHT);
+        SDL_RenderDrawLine(renderer, xPos, startY * CELL_HEIGHT, xPos,
+                           endY * CELL_HEIGHT);
     }
 
     // Draw horizontal grid lines within the visibility radius
     for (int y = startY; y <= endY; y++) {
         int yPos = y * CELL_HEIGHT;
-        SDL_RenderDrawLine(renderer, startX * CELL_WIDTH, yPos, endX * CELL_WIDTH, yPos);
+        SDL_RenderDrawLine(renderer, startX * CELL_WIDTH, yPos,
+                           endX * CELL_WIDTH, yPos);
     }
 
     // Draw active and special cells within the visibility radius
     for (int y = startY; y < endY; ++y) {
         for (int x = startX; x < endX; ++x) {
             if (board[x][y] == 1) {  // Draw active cells
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White color
-                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT};
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255,
+                                       255);  // White color
+                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH,
+                                 CELL_HEIGHT};
                 SDL_RenderFillRect(renderer, &cell);
             }
             if (board[x][y] == 2) {  // Draw special cells
-                SDL_SetRenderDrawColor(renderer, 250, 94, 173, 255); // Pink color
-                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT};
+                SDL_SetRenderDrawColor(renderer, 250, 94, 173,
+                                       255);  // Pink color
+                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH,
+                                 CELL_HEIGHT};
                 SDL_RenderFillRect(renderer, &cell);
-                position object = {x*CELL_WIDTH,y*CELL_HEIGHT,0,0};
-                Shadow(renderer,player,object,VisionRadios);
+                position object = {x * CELL_WIDTH, y * CELL_HEIGHT, 0, 0};
             }
         }
     }
 }
-
 
 /////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
     std::fill(&board[0][0], &board[0][0] + sizeof(board) / sizeof(int), 0);
 
     // draw wall for now should be in window class !!!
-    board[8][8] = 2;board[9][7] = 2;
+    board[8][8] = 2;
+    board[9][7] = 2;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL initialization failed: " << SDL_GetError()
@@ -247,7 +253,7 @@ int main(int argc, char* argv[]) {
 
         Now = pazu.GetCharacterPosition();
         SDL_Rect destRect = {Now.x, Now.y, CELL_WIDTH, CELL_HEIGHT};
-        MainWindow.DrawGrid(renderer,Now,VisionRadios);
+        MainWindow.DrawGrid(renderer, Now, VisionRadios);
         SDL_RenderCopy(renderer, playerTexture, NULL, &destRect);
 
         SDL_RenderPresent(renderer);
