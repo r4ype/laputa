@@ -83,11 +83,12 @@ class Window {
     void DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios);
 };
 
-void Window::DrawGrid(SDL_Renderer* renderer, position player,
-                      int VisionRadios) {
+void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios) {
     // Convert player's position to grid coordinates
     int playerGridX = player.x / CELL_WIDTH;
     int playerGridY = player.y / CELL_HEIGHT;
+    player.x += CELL_WIDTH / 2;
+    player.y += CELL_HEIGHT / 2;
 
     // Define the range of cells to render
     int startX = std::max(0, playerGridX - VisionRadios);
@@ -95,46 +96,50 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
     int startY = std::max(0, playerGridY - VisionRadios);
     int endY = std::min(gridSize, playerGridY + VisionRadios + 1);
 
-    // Set grid line color
-    SDL_SetRenderDrawColor(renderer, 0, 251, 173,
-                           255);  // Use correct alpha value (255 for opaque)
+    // Collect shadow ranges
+    std::vector<std::pair<double, double>> shadowRanges;
+    for (int i = startY; i < endY; i++) {
+        for (int j = startX; j < endX; j++) {
+            if (board[j][i] == 2) { // Wall cell
+                double minAngle = std::min({
+                    atan2(i * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
+                    atan2((i + 1) * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
+                    atan2(i * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x),
+                    atan2((i + 1) * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x)
+                });
 
-    // Draw vertical grid lines within the visibility radius
-    for (int x = startX; x <= endX; x++) {
-        int xPos = x * CELL_WIDTH;
-        SDL_RenderDrawLine(renderer, xPos, startY * CELL_HEIGHT, xPos,
-                           endY * CELL_HEIGHT);
-    }
+                double maxAngle = std::max({
+                    atan2(i * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
+                    atan2((i + 1) * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
+                    atan2(i * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x),
+                    atan2((i + 1) * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x)
+                });
 
-    // Draw horizontal grid lines within the visibility radius
-    for (int y = startY; y <= endY; y++) {
-        int yPos = y * CELL_HEIGHT;
-        SDL_RenderDrawLine(renderer, startX * CELL_WIDTH, yPos,
-                           endX * CELL_WIDTH, yPos);
-    }
-
-    // Draw active and special cells within the visibility radius
-    for (int y = startY; y < endY; ++y) {
-        for (int x = startX; x < endX; ++x) {
-            if (board[x][y] == 1) {  // Draw active cells
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255,
-                                       255);  // White color
-                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH,
-                                 CELL_HEIGHT};
-                SDL_RenderFillRect(renderer, &cell);
+                shadowRanges.emplace_back(minAngle, maxAngle);
             }
-            if (board[x][y] == 2) {  // Draw special cells
-                SDL_SetRenderDrawColor(renderer, 250, 94, 173,
-                                       255);  // Pink color
-                SDL_Rect cell = {x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH,
-                                 CELL_HEIGHT};
-                SDL_RenderFillRect(renderer, &cell);
-                position object = {x * CELL_WIDTH, y * CELL_HEIGHT, 0, 0};
+        }
+    }
+
+    // Draw the grid
+    for (int y = startY * CELL_HEIGHT; y < endY * CELL_HEIGHT; y++) {
+        for (int x = startX * CELL_WIDTH; x < endX * CELL_WIDTH; x++) {
+            bool inShadow = false;
+            double angle = atan2(y - player.y, x - player.x);
+
+            for (const auto& range : shadowRanges) {
+                if (angle >= range.first && angle <= range.second) {
+                    inShadow = true;
+                    break;
+                }
+            }
+
+            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 || board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                SDL_RenderDrawPoint(renderer, x, y);
             }
         }
     }
 }
-
 /////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
     std::fill(&board[0][0], &board[0][0] + sizeof(board) / sizeof(int), 0);
@@ -248,7 +253,7 @@ int main(int argc, char* argv[]) {
 
         pazu.UpdatePosition(keys);
 
-        SDL_SetRenderDrawColor(renderer, 30, 30, 46, 1);
+        SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255);
         SDL_RenderClear(renderer);
 
         Now = pazu.GetCharacterPosition();
