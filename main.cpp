@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #define windowSizeWidth 640
 #define windowSizeHeight 480
@@ -83,7 +84,8 @@ class Window {
     void DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios);
 };
 
-void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios) {
+void Window::DrawGrid(SDL_Renderer* renderer, position player,
+                      int VisionRadios) {
     // Convert player's position to grid coordinates
     int playerGridX = player.x / CELL_WIDTH;
     int playerGridY = player.y / CELL_HEIGHT;
@@ -100,20 +102,26 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
     std::vector<std::pair<double, double>> shadowRanges;
     for (int i = startY; i < endY; i++) {
         for (int j = startX; j < endX; j++) {
-            if (board[j][i] == 2) { // Wall cell
-                double minAngle = std::min({
-                    atan2(i * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
-                    atan2((i + 1) * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
-                    atan2(i * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x),
-                    atan2((i + 1) * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x)
-                });
+            if (board[j][i] == 2) {  // Wall cell
+                double minAngle =
+                    std::min({atan2(i * CELL_HEIGHT - player.y,
+                                    j * CELL_WIDTH - player.x),
+                              atan2((i + 1) * CELL_HEIGHT - player.y,
+                                    j * CELL_WIDTH - player.x),
+                              atan2(i * CELL_HEIGHT - player.y,
+                                    (j + 1) * CELL_WIDTH - player.x),
+                              atan2((i + 1) * CELL_HEIGHT - player.y,
+                                    (j + 1) * CELL_WIDTH - player.x)});
 
-                double maxAngle = std::max({
-                    atan2(i * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
-                    atan2((i + 1) * CELL_HEIGHT - player.y, j * CELL_WIDTH - player.x),
-                    atan2(i * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x),
-                    atan2((i + 1) * CELL_HEIGHT - player.y, (j + 1) * CELL_WIDTH - player.x)
-                });
+                double maxAngle =
+                    std::max({atan2(i * CELL_HEIGHT - player.y,
+                                    j * CELL_WIDTH - player.x),
+                              atan2((i + 1) * CELL_HEIGHT - player.y,
+                                    j * CELL_WIDTH - player.x),
+                              atan2(i * CELL_HEIGHT - player.y,
+                                    (j + 1) * CELL_WIDTH - player.x),
+                              atan2((i + 1) * CELL_HEIGHT - player.y,
+                                    (j + 1) * CELL_WIDTH - player.x)});
 
                 shadowRanges.emplace_back(minAngle, maxAngle);
             }
@@ -133,7 +141,8 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
                 }
             }
 
-            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 || board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
+            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 ||
+                              board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
                 SDL_RenderDrawPoint(renderer, x, y);
             }
