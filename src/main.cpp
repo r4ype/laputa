@@ -1,5 +1,5 @@
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include <algorithm>
 #include <cmath>
@@ -103,6 +103,7 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
 
     struct ShadowRange {
         double minAngle, maxAngle;
+        int expStartX,expStartY,expEndX,expEndY;
     };
 
     const int maxShadows =
@@ -126,7 +127,20 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
                     atan2((i + 1) * CELL_HEIGHT - playerCenterY,
                           (j + 1) * CELL_WIDTH - playerCenterX) *
                         RAD_TO_DEG};
-
+                    double side[4][3] = {
+                    {Distance(playerCenterX, playerCenterY, j * CELL_WIDTH, i * CELL_HEIGHT), (double)j * CELL_WIDTH, (double)i * CELL_HEIGHT},
+                    {Distance(playerCenterX, playerCenterY, j * CELL_WIDTH, (i + 1) * CELL_HEIGHT), (double)j * CELL_WIDTH, (double)(i + 1) * CELL_HEIGHT},
+                    {Distance(playerCenterX, playerCenterY, (j + 1) * CELL_WIDTH, i * CELL_HEIGHT), (double)(j + 1) * CELL_WIDTH, (double)i * CELL_HEIGHT},
+                    {Distance(playerCenterX, playerCenterY, (j + 1) * CELL_WIDTH, (i + 1) * CELL_HEIGHT), (double)(j + 1) * CELL_WIDTH, (double)(i + 1) * CELL_HEIGHT}
+                                };
+                for(int i = 0;i < 3;i++){
+                    for(int j = i+1 ;j < 4;j++){
+                        if(side[i][0] > side[j][0]){
+                            std::swap(side[i][0],side[j][0]);
+                        }
+                    }
+                }
+                
                 for (int k = 0; k < 4; k++) {
                     if (angles[k] < 0) angles[k] += 360;
                 }
@@ -141,7 +155,7 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
                 }
 
                 if (shadowCount < maxShadows) {
-                    shadowRanges[shadowCount++] = {minAngle, maxAngle};
+                    shadowRanges[shadowCount++] = {minAngle, maxAngle,(int)side[0][1],(int)side[0][2],(int)side[3][1],(int)side[3][2]};
                 }
             }
         }
@@ -159,15 +173,56 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
             bool inShadow = false;
             for (int i = 0; i < shadowCount; i++) {
                 const ShadowRange& range = shadowRanges[i];
-                if (range.maxAngle - range.minAngle < 180) {
-                    if (angle >= range.minAngle && angle <= range.maxAngle) {
-                        inShadow = true;
-                        break;
+                if (playerCenterX <= x && playerCenterY <= y && !(x <= std::max(range.expEndX,range.expStartX) && y <= std::max(range.expEndY,range.expStartX))){
+                    if (range.maxAngle - range.minAngle < 180 ) {
+                        if (angle >= range.minAngle && angle <= range.maxAngle) {
+                            inShadow = true;
+                            break;
+                        }
+                    } else {
+                        if (angle >= range.maxAngle || angle <= range.minAngle) {
+                            inShadow = true;
+                            break;
+                        }
                     }
-                } else {
-                    if (angle >= range.maxAngle || angle <= range.minAngle) {
-                        inShadow = true;
-                        break;
+                }
+                if (playerCenterX <= x && playerCenterY >= y && !(x <= std::max(range.expEndX,range.expStartX) && y >= std::min(range.expEndY,range.expStartX))){
+                    if (range.maxAngle - range.minAngle < 180 ) {
+                        if (angle >= range.minAngle && angle <= range.maxAngle) {
+                            inShadow = true;
+                            break;
+                        }
+                    } else {
+                        if (angle >= range.maxAngle || angle <= range.minAngle) {
+                            inShadow = true;
+                            break;
+                        }
+                    }
+                }
+                if (playerCenterX >= x && playerCenterY >= y && !(x >= std::min(range.expEndX,range.expStartX) && y >= std::min(range.expEndY,range.expStartX))){
+                    if (range.maxAngle - range.minAngle < 180 ) {
+                        if (angle >= range.minAngle && angle <= range.maxAngle) {
+                            inShadow = true;
+                            break;
+                        }
+                    } else {
+                        if (angle >= range.maxAngle || angle <= range.minAngle) {
+                            inShadow = true;
+                            break;
+                        }
+                    }
+                }
+                if (playerCenterX >= x && playerCenterY <= y && !(x >= std::min(range.expEndX,range.expStartX) && y <= std::max(range.expEndY,range.expStartX))){
+                    if (range.maxAngle - range.minAngle < 180 ) {
+                        if (angle >= range.minAngle && angle <= range.maxAngle) {
+                            inShadow = true;
+                            break;
+                        }
+                    } else {
+                        if (angle >= range.maxAngle || angle <= range.minAngle) {
+                            inShadow = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -185,8 +240,8 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
 int main(int argc, char* argv[]) {
     std::fill(&board[0][0], &board[0][0] + sizeof(board) / sizeof(int), 0);
 
-    board[5][8] = 2;
-    board[6][7] = 2;
+    board[5][6] = 2;
+    board[6][8] = 2;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL initialization failed: " << SDL_GetError()
@@ -238,9 +293,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Your code to create a window and renderer...
-
-    SDL_Texture* playerTexture =
-        IMG_LoadTexture(renderer, "../assets/images/player.png");
+    SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "../assets/images/player.png");
     if (!playerTexture) {
         std::cerr << "Failed to load texture: " << IMG_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
