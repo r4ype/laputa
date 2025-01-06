@@ -78,7 +78,6 @@ class Window {
         return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
     }
 
-
    public:
     void init(int widthScreen, int heightScreen) {
         width = widthScreen;
@@ -88,27 +87,26 @@ class Window {
 };
 
 void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios) {
-    // Constants for angle conversions
     const double DEG_TO_RAD = M_PI / 180.0;
     const double RAD_TO_DEG = 180.0 / M_PI;
 
-    // Convert player's position to grid coordinates and center
     int playerGridX = player.x / CELL_WIDTH;
     int playerGridY = player.y / CELL_HEIGHT;
     int playerCenterX = player.x + CELL_WIDTH / 2;
     int playerCenterY = player.y + CELL_HEIGHT / 2;
 
-    // Define the range of cells to render
     int startX = std::max(0, playerGridX - VisionRadios);
     int endX = std::min(gridSize, playerGridX + VisionRadios + 1);
     int startY = std::max(0, playerGridY - VisionRadios);
     int endY = std::min(gridSize, playerGridY + VisionRadios + 1);
 
-    // Pre-compute shadow ranges for walls
     struct ShadowRange {
         double minAngle, maxAngle;
     };
-    std::vector<ShadowRange> shadowRanges;
+
+    const int maxShadows = gridSize * gridSize; // Maximum possible shadows in the grid
+    ShadowRange shadowRanges[maxShadows];
+    int shadowCount = 0;
 
     for (int i = startY; i < endY; i++) {
         for (int j = startX; j < endX; j++) {
@@ -120,46 +118,43 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
                     atan2((i + 1) * CELL_HEIGHT - playerCenterY, (j + 1) * CELL_WIDTH - playerCenterX) * RAD_TO_DEG
                 };
 
-                // Normalize angles to 0-360 degrees
                 for (int k = 0; k < 4; k++) {
                     if (angles[k] < 0) angles[k] += 360;
                 }
-                std::sort(angles,angles+4);
-                // Find min and max angle for this wall
+                std::sort(angles, angles + 4);
+
                 double minAngle = angles[0];
                 double maxAngle = angles[3];
 
-                // Handle cases where angles wrap around 360
                 if (maxAngle - minAngle > 180) {
                     minAngle = angles[1];
                     maxAngle = angles[2];
                 }
 
-                shadowRanges.push_back({minAngle, maxAngle});
+                if (shadowCount < maxShadows) {
+                    shadowRanges[shadowCount++] = {minAngle, maxAngle};
+                }
             }
         }
     }
 
-    // Draw the grid and apply shadow logic
     for (int y = startY * CELL_HEIGHT; y < endY * CELL_HEIGHT; y++) {
         for (int x = startX * CELL_WIDTH; x < endX * CELL_WIDTH; x++) {
             double dist = Distance(playerCenterX, playerCenterY, x, y);
-            if (dist > VisionRadios * CELL_WIDTH) continue; // Skip out-of-range points
+            if (dist > VisionRadios * CELL_WIDTH) continue;
 
             double angle = atan2(y - playerCenterY, x - playerCenterX) * RAD_TO_DEG;
             if (angle < 0) angle += 360;
 
-            // Check if point is in shadow
             bool inShadow = false;
-            for (const auto& range : shadowRanges) {
+            for (int i = 0; i < shadowCount; i++) {
+                const ShadowRange& range = shadowRanges[i];
                 if (range.maxAngle - range.minAngle < 180) {
-                    // Normal case: Shadow range does not cross 360° boundary
                     if (angle >= range.minAngle && angle <= range.maxAngle) {
                         inShadow = true;
                         break;
                     }
                 } else {
-                    // Special case: Shadow range crosses 360° boundary
                     if (angle >= range.maxAngle || angle <= range.minAngle) {
                         inShadow = true;
                         break;
@@ -167,21 +162,18 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
                 }
             }
 
-            // Render visible grid points
             if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 || board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
                 SDL_RenderDrawPoint(renderer, x, y);
             }
         }
     }
-
 }
 
 /////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
     std::fill(&board[0][0], &board[0][0] + sizeof(board) / sizeof(int), 0);
 
-    // draw wall for now should be in window class !!!
     board[5][8] = 2;
     board[6][7] = 2;
 
@@ -311,3 +303,4 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
     return 0;
 }
+
