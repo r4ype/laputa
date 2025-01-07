@@ -188,9 +188,8 @@ int main(int argc, char* argv[]) {
 
         // start of modification
         if (!actionQueue.empty()) {
-            std::string currentAction = actionQueue.front();
+            std::cout << actionQueue.front() << std::endl;
             actionQueue.pop();
-            std::cout << currentAction << std::endl;
         }
         // end of modification
     }
