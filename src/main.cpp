@@ -85,9 +85,7 @@ class Window {
     }
     void DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios);
 };
-
-void Window::DrawGrid(SDL_Renderer* renderer, position player,
-                      int VisionRadios) {
+void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios) {
     const double DEG_TO_RAD = M_PI / 180.0;
     const double RAD_TO_DEG = 180.0 / M_PI;
 
@@ -103,78 +101,64 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
 
     struct ShadowRange {
         double minAngle, maxAngle;
-        int expStartX,expStartY,expEndX,expEndY;
+        int minsideX,minsideY,maxsideX,maxsideY;
     };
-
-    const int maxShadows =
-        gridSize * gridSize;  // Maximum possible shadows in the grid
-    ShadowRange shadowRanges[maxShadows];
+    ShadowRange shadowRanges[gridSize * gridSize]; // Maximum possible shadows in the grid
     int shadowCount = 0;
 
+    // Step 1: Draw visible walls within the range
     for (int i = startY; i < endY; i++) {
         for (int j = startX; j < endX; j++) {
-            if (board[j][i] == 2) {  // Wall cell
+            if (board[j][i] == 2) { // Wall cell
                 double angles[4] = {
-                    atan2(i * CELL_HEIGHT - playerCenterY,
-                          j * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG,
-                    atan2((i + 1) * CELL_HEIGHT - playerCenterY,
-                          j * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG,
-                    atan2(i * CELL_HEIGHT - playerCenterY,
-                          (j + 1) * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG,
-                    atan2((i + 1) * CELL_HEIGHT - playerCenterY,
-                          (j + 1) * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG};
-                    double side[4][3] = {
-                    {Distance(playerCenterX, playerCenterY, j * CELL_WIDTH, i * CELL_HEIGHT), (double)j * CELL_WIDTH, (double)i * CELL_HEIGHT},
-                    {Distance(playerCenterX, playerCenterY, j * CELL_WIDTH, (i + 1) * CELL_HEIGHT), (double)j * CELL_WIDTH, (double)(i + 1) * CELL_HEIGHT},
-                    {Distance(playerCenterX, playerCenterY, (j + 1) * CELL_WIDTH, i * CELL_HEIGHT), (double)(j + 1) * CELL_WIDTH, (double)i * CELL_HEIGHT},
-                    {Distance(playerCenterX, playerCenterY, (j + 1) * CELL_WIDTH, (i + 1) * CELL_HEIGHT), (double)(j + 1) * CELL_WIDTH, (double)(i + 1) * CELL_HEIGHT}
-                                };
-                for(int i = 0;i < 3;i++){
-                    for(int j = i+1 ;j < 4;j++){
-                        if(side[i][0] > side[j][0]){
-                            std::swap(side[i][0],side[j][0]);
-                        }
-                    }
-                }
-                
+                    atan2(i * CELL_HEIGHT - playerCenterY, j * CELL_WIDTH - playerCenterX) * RAD_TO_DEG,
+                    atan2((i + 1) * CELL_HEIGHT - playerCenterY, j * CELL_WIDTH - playerCenterX) * RAD_TO_DEG,
+                    atan2(i * CELL_HEIGHT - playerCenterY, (j + 1) * CELL_WIDTH - playerCenterX) * RAD_TO_DEG,
+                    atan2((i + 1) * CELL_HEIGHT - playerCenterY, (j + 1) * CELL_WIDTH - playerCenterX) * RAD_TO_DEG
+                };
+                // Normalize angles to [0, 360)
                 for (int k = 0; k < 4; k++) {
-                    if (angles[k] < 0) angles[k] += 360;
+                    if (angles[k] < 0) {
+                        angles[k] += 360;
+                    }
+                  
                 }
-                std::sort(angles, angles + 4);
 
+                std::sort(angles, angles + 4);
                 double minAngle = angles[0];
                 double maxAngle = angles[3];
 
+                // Handle wrap-around case for shadows crossing 0 degrees
                 if (maxAngle - minAngle > 180) {
                     minAngle = angles[1];
                     maxAngle = angles[2];
                 }
 
-                if (shadowCount < maxShadows) {
-                    shadowRanges[shadowCount++] = {minAngle, maxAngle,(int)side[0][1],(int)side[0][2],(int)side[3][1],(int)side[3][2]};
+                if (shadowCount < gridSize * gridSize) {
+                    shadowRanges[shadowCount++] = {minAngle, maxAngle,j* CELL_WIDTH , i* CELL_HEIGHT , (j+1) * CELL_WIDTH , (i+1) * CELL_HEIGHT};
                 }
+                
             }
         }
     }
 
+    // Step 2: Turn off pixels in shadow ranges
     for (int y = startY * CELL_HEIGHT; y < endY * CELL_HEIGHT; y++) {
         for (int x = startX * CELL_WIDTH; x < endX * CELL_WIDTH; x++) {
             double dist = Distance(playerCenterX, playerCenterY, x, y);
-            if (dist > VisionRadios * CELL_WIDTH) continue;
+            if (dist > VisionRadios * CELL_WIDTH || x < startX * CELL_WIDTH || x >= endX * CELL_WIDTH || y < startY * CELL_HEIGHT || y >= endY * CELL_HEIGHT) continue;
 
-            double angle =
-                atan2(y - playerCenterY, x - playerCenterX) * RAD_TO_DEG;
+            double angle = atan2(y - playerCenterY, x - playerCenterX) * RAD_TO_DEG;
             if (angle < 0) angle += 360;
 
             bool inShadow = false;
             for (int i = 0; i < shadowCount; i++) {
                 const ShadowRange& range = shadowRanges[i];
-                if (playerCenterX <= x && playerCenterY <= y && !(x <= std::max(range.expEndX,range.expStartX) && y <= std::max(range.expEndY,range.expStartX))){
-                    if (range.maxAngle - range.minAngle < 180 ) {
+                if((playerCenterX <= x && playerCenterY <= y && (x > range.maxsideX || y > range.maxsideY))||
+                   (playerCenterX <= x && playerCenterY >= y && (x > range.maxsideX || y < range.minsideY))||
+                   (playerCenterX >= x && playerCenterY <= y && (x < range.minsideX || y > range.maxsideY))||
+                   (playerCenterX >= x && playerCenterY >= y && (x < range.minsideX || y < range.minsideY))){
+                    if (range.maxAngle - range.minAngle < 180) {
                         if (angle >= range.minAngle && angle <= range.maxAngle) {
                             inShadow = true;
                             break;
@@ -185,53 +169,15 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
                             break;
                         }
                     }
-                }
-                if (playerCenterX <= x && playerCenterY >= y && !(x <= std::max(range.expEndX,range.expStartX) && y >= std::min(range.expEndY,range.expStartX))){
-                    if (range.maxAngle - range.minAngle < 180 ) {
-                        if (angle >= range.minAngle && angle <= range.maxAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    } else {
-                        if (angle >= range.maxAngle || angle <= range.minAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    }
-                }
-                if (playerCenterX >= x && playerCenterY >= y && !(x >= std::min(range.expEndX,range.expStartX) && y >= std::min(range.expEndY,range.expStartX))){
-                    if (range.maxAngle - range.minAngle < 180 ) {
-                        if (angle >= range.minAngle && angle <= range.maxAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    } else {
-                        if (angle >= range.maxAngle || angle <= range.minAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    }
-                }
-                if (playerCenterX >= x && playerCenterY <= y && !(x >= std::min(range.expEndX,range.expStartX) && y <= std::max(range.expEndY,range.expStartX))){
-                    if (range.maxAngle - range.minAngle < 180 ) {
-                        if (angle >= range.minAngle && angle <= range.maxAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    } else {
-                        if (angle >= range.maxAngle || angle <= range.minAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    }
-                }
-            }
 
-            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 ||
-                              board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                }
+            }   
+
+            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 || board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Green for visible cells
                 SDL_RenderDrawPoint(renderer, x, y);
             }
+
         }
     }
 }
@@ -240,8 +186,9 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
 int main(int argc, char* argv[]) {
     std::fill(&board[0][0], &board[0][0] + sizeof(board) / sizeof(int), 0);
 
-    board[5][6] = 2;
-    board[6][8] = 2;
+    board[3][6] = 2;
+    board[4][7] = 2;
+    board[5][8] = 2;
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL initialization failed: " << SDL_GetError()
