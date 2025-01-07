@@ -85,7 +85,8 @@ class Window {
     }
     void DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios);
 };
-void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios) {
+void Window::DrawGrid(SDL_Renderer* renderer, position player,
+                      int VisionRadios) {
     const double DEG_TO_RAD = M_PI / 180.0;
     const double RAD_TO_DEG = 180.0 / M_PI;
 
@@ -101,27 +102,34 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
 
     struct ShadowRange {
         double minAngle, maxAngle;
-        int minsideX,minsideY,maxsideX,maxsideY;
+        int minsideX, minsideY, maxsideX, maxsideY;
     };
-    ShadowRange shadowRanges[gridSize * gridSize]; // Maximum possible shadows in the grid
+    ShadowRange shadowRanges[gridSize *
+                             gridSize];  // Maximum possible shadows in the grid
     int shadowCount = 0;
 
     // Step 1: Draw visible walls within the range
     for (int i = startY; i < endY; i++) {
         for (int j = startX; j < endX; j++) {
-            if (board[j][i] == 2) { // Wall cell
+            if (board[j][i] == 2) {  // Wall cell
                 double angles[4] = {
-                    atan2(i * CELL_HEIGHT - playerCenterY, j * CELL_WIDTH - playerCenterX) * RAD_TO_DEG,
-                    atan2((i + 1) * CELL_HEIGHT - playerCenterY, j * CELL_WIDTH - playerCenterX) * RAD_TO_DEG,
-                    atan2(i * CELL_HEIGHT - playerCenterY, (j + 1) * CELL_WIDTH - playerCenterX) * RAD_TO_DEG,
-                    atan2((i + 1) * CELL_HEIGHT - playerCenterY, (j + 1) * CELL_WIDTH - playerCenterX) * RAD_TO_DEG
-                };
+                    atan2(i * CELL_HEIGHT - playerCenterY,
+                          j * CELL_WIDTH - playerCenterX) *
+                        RAD_TO_DEG,
+                    atan2((i + 1) * CELL_HEIGHT - playerCenterY,
+                          j * CELL_WIDTH - playerCenterX) *
+                        RAD_TO_DEG,
+                    atan2(i * CELL_HEIGHT - playerCenterY,
+                          (j + 1) * CELL_WIDTH - playerCenterX) *
+                        RAD_TO_DEG,
+                    atan2((i + 1) * CELL_HEIGHT - playerCenterY,
+                          (j + 1) * CELL_WIDTH - playerCenterX) *
+                        RAD_TO_DEG};
                 // Normalize angles to [0, 360)
                 for (int k = 0; k < 4; k++) {
                     if (angles[k] < 0) {
                         angles[k] += 360;
                     }
-                  
                 }
 
                 std::sort(angles, angles + 4);
@@ -135,9 +143,13 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
                 }
 
                 if (shadowCount < gridSize * gridSize) {
-                    shadowRanges[shadowCount++] = {minAngle, maxAngle,j* CELL_WIDTH , i* CELL_HEIGHT , (j+1) * CELL_WIDTH , (i+1) * CELL_HEIGHT};
+                    shadowRanges[shadowCount++] = {minAngle,
+                                                   maxAngle,
+                                                   j * CELL_WIDTH,
+                                                   i * CELL_HEIGHT,
+                                                   (j + 1) * CELL_WIDTH,
+                                                   (i + 1) * CELL_HEIGHT};
                 }
-                
             }
         }
     }
@@ -146,38 +158,48 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios)
     for (int y = startY * CELL_HEIGHT; y < endY * CELL_HEIGHT; y++) {
         for (int x = startX * CELL_WIDTH; x < endX * CELL_WIDTH; x++) {
             double dist = Distance(playerCenterX, playerCenterY, x, y);
-            if (dist > VisionRadios * CELL_WIDTH || x < startX * CELL_WIDTH || x >= endX * CELL_WIDTH || y < startY * CELL_HEIGHT || y >= endY * CELL_HEIGHT) continue;
+            if (dist > VisionRadios * CELL_WIDTH || x < startX * CELL_WIDTH ||
+                x >= endX * CELL_WIDTH || y < startY * CELL_HEIGHT ||
+                y >= endY * CELL_HEIGHT)
+                continue;
 
-            double angle = atan2(y - playerCenterY, x - playerCenterX) * RAD_TO_DEG;
+            double angle =
+                atan2(y - playerCenterY, x - playerCenterX) * RAD_TO_DEG;
             if (angle < 0) angle += 360;
 
             bool inShadow = false;
             for (int i = 0; i < shadowCount; i++) {
                 const ShadowRange& range = shadowRanges[i];
-                if((playerCenterX <= x && playerCenterY <= y && (x > range.maxsideX || y > range.maxsideY))||
-                   (playerCenterX <= x && playerCenterY >= y && (x > range.maxsideX || y < range.minsideY))||
-                   (playerCenterX >= x && playerCenterY <= y && (x < range.minsideX || y > range.maxsideY))||
-                   (playerCenterX >= x && playerCenterY >= y && (x < range.minsideX || y < range.minsideY))){
+                if ((playerCenterX <= x && playerCenterY <= y &&
+                     (x > range.maxsideX || y > range.maxsideY)) ||
+                    (playerCenterX <= x && playerCenterY >= y &&
+                     (x > range.maxsideX || y < range.minsideY)) ||
+                    (playerCenterX >= x && playerCenterY <= y &&
+                     (x < range.minsideX || y > range.maxsideY)) ||
+                    (playerCenterX >= x && playerCenterY >= y &&
+                     (x < range.minsideX || y < range.minsideY))) {
                     if (range.maxAngle - range.minAngle < 180) {
-                        if (angle >= range.minAngle && angle <= range.maxAngle) {
+                        if (angle >= range.minAngle &&
+                            angle <= range.maxAngle) {
                             inShadow = true;
                             break;
                         }
                     } else {
-                        if (angle >= range.maxAngle || angle <= range.minAngle) {
+                        if (angle >= range.maxAngle ||
+                            angle <= range.minAngle) {
                             inShadow = true;
                             break;
                         }
                     }
-
                 }
-            }   
-
-            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 || board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Green for visible cells
-                SDL_RenderDrawPoint(renderer, x, y);
             }
 
+            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 ||
+                              board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0,
+                                       255);  // Green for visible cells
+                SDL_RenderDrawPoint(renderer, x, y);
+            }
         }
     }
 }
@@ -240,7 +262,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Your code to create a window and renderer...
-    SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "../assets/images/player.png");
+    SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "assets/player.png");
     if (!playerTexture) {
         std::cerr << "Failed to load texture: " << IMG_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
