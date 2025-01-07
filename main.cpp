@@ -1,3 +1,4 @@
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -17,60 +18,24 @@ const int VisionRadios = 3;
 int board[gridSize][gridSize];
 
 struct position {
-    int x, y, xvel, yvel;
+    int x, y;
 };
 
-enum Keys { LEFT = 0, RIGHT, UP, DOWN };
-
-/////////////////////////////////////////////////////////
 class Character {
    private:
     position p1 = {0};
-    int movementDelay = 5;  // Number of frames to wait between movements
-    int frameCounter = 0;   // Counter to track frames
 
    public:
-    void init(int startX, int startY, int velocityX, int velocityY) {
+    void init(int startX, int startY) {
         board[startX][startY] = 1;
         p1.x = startX;
         p1.y = startY;
-        p1.xvel = velocityX;
-        p1.yvel = velocityY;
     }
-    void UpdatePosition(bool keys[4]);
-    position GetCharacterPosition();
+    position GetCharacterPosition() {
+        return {p1.x * CELL_WIDTH, p1.y * CELL_HEIGHT};
+    }
 };
 
-void Character::UpdatePosition(bool keys[4]) {
-    frameCounter++;
-    if (frameCounter < movementDelay) {
-        return;  // Skip update if the delay hasn't passed
-    }
-    frameCounter = 0;  // Reset the counter after movement
-
-    if (keys[LEFT] && p1.x - 1 >= 0 && board[p1.x - 1][p1.y] == 0) {
-        std::swap(board[p1.x][p1.y], board[p1.x - 1][p1.y]);
-        p1.x -= 1;
-    }
-    if (keys[RIGHT] && p1.x + 1 < gridSize && board[p1.x + 1][p1.y] == 0) {
-        std::swap(board[p1.x][p1.y], board[p1.x + 1][p1.y]);
-        p1.x += 1;
-    }
-    if (keys[UP] && p1.y - 1 >= 0 && board[p1.x][p1.y - 1] == 0) {
-        std::swap(board[p1.x][p1.y], board[p1.x][p1.y - 1]);
-        p1.y -= 1;
-    }
-    if (keys[DOWN] && p1.y + 1 < gridSize && board[p1.x][p1.y + 1] == 0) {
-        std::swap(board[p1.x][p1.y], board[p1.x][p1.y + 1]);
-        p1.y += 1;
-    }
-}
-
-position Character::GetCharacterPosition() {
-    return {p1.x * CELL_WIDTH, p1.y * CELL_HEIGHT, p1.xvel, p1.yvel};
-}
-
-/////////////////////////////////////////////////////////
 class Window {
    private:
     int width, height;
@@ -85,11 +50,9 @@ class Window {
     }
     void DrawGrid(SDL_Renderer* renderer, position player, int VisionRadios);
 };
+
 void Window::DrawGrid(SDL_Renderer* renderer, position player,
                       int VisionRadios) {
-    const double DEG_TO_RAD = M_PI / 180.0;
-    const double RAD_TO_DEG = 180.0 / M_PI;
-
     int playerGridX = player.x / CELL_WIDTH;
     int playerGridY = player.y / CELL_HEIGHT;
     int playerCenterX = player.x + CELL_WIDTH / 2;
@@ -100,111 +63,18 @@ void Window::DrawGrid(SDL_Renderer* renderer, position player,
     int startY = std::max(0, playerGridY - VisionRadios);
     int endY = std::min(gridSize, playerGridY + VisionRadios + 1);
 
-    struct ShadowRange {
-        double minAngle, maxAngle;
-        int minsideX, minsideY, maxsideX, maxsideY;
-    };
-    ShadowRange shadowRanges[gridSize *
-                             gridSize];  // Maximum possible shadows in the grid
-    int shadowCount = 0;
-
-    // Step 1: Draw visible walls within the range
     for (int i = startY; i < endY; i++) {
         for (int j = startX; j < endX; j++) {
-            if (board[j][i] == 2) {  // Wall cell
-                double angles[4] = {
-                    atan2(i * CELL_HEIGHT - playerCenterY,
-                          j * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG,
-                    atan2((i + 1) * CELL_HEIGHT - playerCenterY,
-                          j * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG,
-                    atan2(i * CELL_HEIGHT - playerCenterY,
-                          (j + 1) * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG,
-                    atan2((i + 1) * CELL_HEIGHT - playerCenterY,
-                          (j + 1) * CELL_WIDTH - playerCenterX) *
-                        RAD_TO_DEG};
-                // Normalize angles to [0, 360)
-                for (int k = 0; k < 4; k++) {
-                    if (angles[k] < 0) {
-                        angles[k] += 360;
-                    }
-                }
-
-                std::sort(angles, angles + 4);
-                double minAngle = angles[0];
-                double maxAngle = angles[3];
-
-                // Handle wrap-around case for shadows crossing 0 degrees
-                if (maxAngle - minAngle > 180) {
-                    minAngle = angles[1];
-                    maxAngle = angles[2];
-                }
-
-                if (shadowCount < gridSize * gridSize) {
-                    shadowRanges[shadowCount++] = {minAngle,
-                                                   maxAngle,
-                                                   j * CELL_WIDTH,
-                                                   i * CELL_HEIGHT,
-                                                   (j + 1) * CELL_WIDTH,
-                                                   (i + 1) * CELL_HEIGHT};
-                }
-            }
-        }
-    }
-
-    // Step 2: Turn off pixels in shadow ranges
-    for (int y = startY * CELL_HEIGHT; y < endY * CELL_HEIGHT; y++) {
-        for (int x = startX * CELL_WIDTH; x < endX * CELL_WIDTH; x++) {
-            double dist = Distance(playerCenterX, playerCenterY, x, y);
-            if (dist > VisionRadios * CELL_WIDTH || x < startX * CELL_WIDTH ||
-                x >= endX * CELL_WIDTH || y < startY * CELL_HEIGHT ||
-                y >= endY * CELL_HEIGHT)
-                continue;
-
-            double angle =
-                atan2(y - playerCenterY, x - playerCenterX) * RAD_TO_DEG;
-            if (angle < 0) angle += 360;
-
-            bool inShadow = false;
-            for (int i = 0; i < shadowCount; i++) {
-                const ShadowRange& range = shadowRanges[i];
-                if ((playerCenterX <= x && playerCenterY <= y &&
-                     (x > range.maxsideX || y > range.maxsideY)) ||
-                    (playerCenterX <= x && playerCenterY >= y &&
-                     (x > range.maxsideX || y < range.minsideY)) ||
-                    (playerCenterX >= x && playerCenterY <= y &&
-                     (x < range.minsideX || y > range.maxsideY)) ||
-                    (playerCenterX >= x && playerCenterY >= y &&
-                     (x < range.minsideX || y < range.minsideY))) {
-                    if (range.maxAngle - range.minAngle < 180) {
-                        if (angle >= range.minAngle &&
-                            angle <= range.maxAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    } else {
-                        if (angle >= range.maxAngle ||
-                            angle <= range.minAngle) {
-                            inShadow = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!inShadow && (x % CELL_WIDTH == 0 || y % CELL_HEIGHT == 0 ||
-                              board[x / CELL_WIDTH][y / CELL_HEIGHT] == 2)) {
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0,
-                                       255);  // Green for visible cells
-                SDL_RenderDrawPoint(renderer, x, y);
+            if (board[j][i] == 2) {
+                SDL_Rect rect = {j * CELL_WIDTH, i * CELL_HEIGHT, CELL_WIDTH,
+                                 CELL_HEIGHT};
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                SDL_RenderFillRect(renderer, &rect);
             }
         }
     }
 }
 
-/////////////////////////////////////////////////////////
 int main(int argc, char* argv[]) {
     std::fill(&board[0][0], &board[0][0] + sizeof(board) / sizeof(int), 0);
 
@@ -246,22 +116,6 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Initialize SDL2
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "Failed to initialize SDL: " << SDL_GetError()
-                  << std::endl;
-        return -1;
-    }
-
-    // Initialize SDL_image with PNG support
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        std::cerr << "Failed to initialize SDL_image: " << IMG_GetError()
-                  << std::endl;
-        SDL_Quit();
-        return -1;
-    }
-
-    // Your code to create a window and renderer...
     SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "assets/player.png");
     if (!playerTexture) {
         std::cerr << "Failed to load texture: " << IMG_GetError() << std::endl;
@@ -272,81 +126,31 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Your code to handle texture and game loop...
+    Character player;
+    player.init(0, 0);
 
-    Character pazu;
-    pazu.init(0, 0, CELL_WIDTH, CELL_HEIGHT);
-    position Now;
-
-    Window MainWindow;
-    MainWindow.init(width, height);
+    Window gameWindow;
+    gameWindow.init(width, height);
 
     bool gameIsRunning = true;
     SDL_Event event;
-    bool keys[4] = {false, false, false, false};
-
-    Uint32 frameStart, frameTime;
 
     while (gameIsRunning) {
-        frameStart = SDL_GetTicks();
-
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT:
-                    gameIsRunning = false;
-                    break;
-                case SDL_KEYDOWN:
-                    switch (event.key.keysym.sym) {
-                        case SDLK_a:
-                            keys[LEFT] = true;
-                            break;
-                        case SDLK_d:
-                            keys[RIGHT] = true;
-                            break;
-                        case SDLK_w:
-                            keys[UP] = true;
-                            break;
-                        case SDLK_s:
-                            keys[DOWN] = true;
-                            break;
-                        case SDLK_q:
-                            gameIsRunning = false;
-                            break;
-                    }
-                    break;
-                case SDL_KEYUP:
-                    switch (event.key.keysym.sym) {
-                        case SDLK_a:
-                            keys[LEFT] = false;
-                            break;
-                        case SDLK_d:
-                            keys[RIGHT] = false;
-                            break;
-                        case SDLK_w:
-                            keys[UP] = false;
-                            break;
-                        case SDLK_s:
-                            keys[DOWN] = false;
-                            break;
-                    }
-                    break;
-            }
-        }
-
-        pazu.UpdatePosition(keys);
-
         SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255);
         SDL_RenderClear(renderer);
 
-        Now = pazu.GetCharacterPosition();
-        SDL_Rect destRect = {Now.x, Now.y, CELL_WIDTH, CELL_HEIGHT};
-        MainWindow.DrawGrid(renderer, Now, VisionRadios);
+        position playerPos = player.GetCharacterPosition();
+        SDL_Rect destRect = {playerPos.x, playerPos.y, CELL_WIDTH, CELL_HEIGHT};
+        gameWindow.DrawGrid(renderer, playerPos, VisionRadios);
         SDL_RenderCopy(renderer, playerTexture, NULL, &destRect);
 
         SDL_RenderPresent(renderer);
 
-        frameTime = SDL_GetTicks() - frameStart;
-        if (frameTime < 16) SDL_Delay(16 - frameTime);  // Cap at ~60 FPS
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                gameIsRunning = false;
+            }
+        }
     }
 
     SDL_DestroyTexture(playerTexture);
