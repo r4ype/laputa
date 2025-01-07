@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <queue>
+#include <string>
 
 #define windowSizeWidth 640
 #define windowSizeHeight 480
@@ -135,6 +137,23 @@ int main(int argc, char* argv[]) {
     bool gameIsRunning = true;
     SDL_Event event;
 
+    // start of modification
+    std::queue<std::string> actionQueue;
+    std::string currentInput;
+    auto isValidAction = [](const std::string& action) {
+        if (action.empty()) return false;
+        char dir = action.back();
+        if (dir != 'h' && dir != 'j' && dir != 'k' && dir != 'l') return false;
+        std::string numPart = action.substr(0, action.size() - 1);
+        if (numPart.empty()) return true;
+        for (char c : numPart) {
+            if (!isdigit(c)) return false;
+        }
+        int num = std::stoi(numPart);
+        return num >= 1 && num <= 8;
+    };
+    // end of modification
+
     while (gameIsRunning) {
         SDL_SetRenderDrawColor(renderer, 30, 30, 46, 255);
         SDL_RenderClear(renderer);
@@ -150,7 +169,29 @@ int main(int argc, char* argv[]) {
             if (event.type == SDL_QUIT) {
                 gameIsRunning = false;
             }
+            // start of modification
+            else if (event.type == SDL_KEYDOWN) {
+                char key = static_cast<char>(event.key.keysym.sym);
+                if (isdigit(key)) {
+                    currentInput += key;
+                } else if (key == 'h' || key == 'j' || key == 'k' || key == 'l') {
+                    currentInput += key;
+                    if (isValidAction(currentInput)) {
+                        actionQueue.push(currentInput);
+                    }
+                    currentInput.clear();
+                }
+            }
+            // end of modification
         }
+
+        // start of modification
+        if (!actionQueue.empty()) {
+            std::string currentAction = actionQueue.front();
+            actionQueue.pop();
+            std::cout << currentAction << std::endl;
+        }
+        // end of modification
     }
 
     SDL_DestroyTexture(playerTexture);
