@@ -174,7 +174,8 @@ int main(int argc, char* argv[]) {
                 char key = static_cast<char>(event.key.keysym.sym);
                 if (isdigit(key)) {
                     currentInput += key;
-                } else if (key == 'h' || key == 'j' || key == 'k' || key == 'l') {
+                } else if (key == 'h' || key == 'j' || key == 'k' ||
+                           key == 'l') {
                     currentInput += key;
                     if (isValidAction(currentInput)) {
                         actionQueue.push(currentInput);
