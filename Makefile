@@ -1,14 +1,25 @@
+# Define the compiler
 CXX = g++
-CXXFLAGS = -Iinclude
-LDFLAGS = -Llib -lSDL2main -lSDL2 -lSDL2_image
 
-TARGET = laputa
+# Define compiler flags
+CXXFLAGS = -Iinclude `pkg-config --cflags sdl2 SDL2_image`
 
-SRC = src/main.cpp
+# Define libraries
+LIBS = -lSDL2 -lSDL2_image `pkg-config --libs sdl2 SDL2_image`
 
-$(TARGET): $(SRC)
-	$(CXX) $(SRC) -o $(TARGET) $(CXXFLAGS) $(LDFLAGS)
+# Define source files and target executable
+SRCS = src/main.cpp
+TARGET = game
 
-run:
-	./laputa
+# Rule to build the project
+$(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRCS) $(LIBS)
+
+# Rule to run the game with the correct working directory
+run: $(TARGET)
+	ASSETS_PATH=assets ./$(TARGET)
+
+# Clean up build artifacts
+clean:
+	rm -f $(TARGET) src/*.o
 

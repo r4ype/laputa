@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Your code to create a window and renderer...
-    SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "../assets/images/player.png");
+    SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "assets/images/player.png");
     if (!playerTexture) {
         std::cerr << "Failed to load texture: " << IMG_GetError() << std::endl;
         SDL_DestroyRenderer(renderer);
