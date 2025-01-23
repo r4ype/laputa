@@ -1,9 +1,15 @@
 { pkgs ? import <nixpkgs> {} }:
+
 pkgs.mkShell {
+  name = "laputa";
+
   buildInputs = [
+    pkgs.pkg-config
     pkgs.SDL2
     pkgs.SDL2_image
-    pkgs.pkg-config
   ];
-}
 
+  shellHook = ''
+    echo "laputa shell is ready"
+  '';
+}
