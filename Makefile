@@ -9,7 +9,7 @@ LIBS = -lSDL2 -lSDL2_image `pkg-config --libs sdl2 SDL2_image`
 
 # Define source files and target executable
 SRCS = src/main.cpp
-TARGET = game
+TARGET = laputa
 
 # Rule to build the project
 $(TARGET): $(SRCS)
