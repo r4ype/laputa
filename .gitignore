@@ -2,3 +2,4 @@ laputa.exe
 laputa
 *.out
 prog
+*.o
