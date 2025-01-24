@@ -38,7 +38,7 @@ void Game::cleanup() {
 void Game::handleEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) running = false;
+        if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_q) running = false;
         player->handleInput(event);
     }
 }

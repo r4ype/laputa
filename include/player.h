@@ -16,7 +16,7 @@ private:
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     SDL_Rect srcRect, destRect;
-
+    bool keys[4];
     int x, y;
     int speed;
 };
