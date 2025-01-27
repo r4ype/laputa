@@ -49,7 +49,7 @@ bool find(mapBlock now, int targetX, int targetY) {
         }
 
         for (int i = 0; i < 4; i++) {
-            if ( find(around[i], targetX, targetY)) {
+            if (board[around[i].x][around[i].y] != 4 && find(around[i], targetX, targetY)) {
                 board[now.x][now.y] = 2;
                 return true;
             }
@@ -59,12 +59,13 @@ bool find(mapBlock now, int targetX, int targetY) {
 }
 
 int main() {
-    board[7][9] = 1;
+    board[8][1] = 1;
     board[1][1] = 3;
+    board[4][1] = 4;
     mapBlock enemy;
-    toMapBlock(&enemy, 1, 1, 7, 9, 0);
-
-    if (find(enemy, 7, 9)) {
+    toMapBlock(&enemy, 1, 1, 8, 1, 0);
+    if (find(enemy, 8, 1)) {
+        board[1][1] = 3;
         draw();
     } else {
         std::cout << "can't reach there" << std::endl;
