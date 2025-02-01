@@ -5,7 +5,7 @@
 
 class Player {
 public:
-    Player(SDL_Renderer* renderer);
+    Player(SDL_Renderer* renderer, int width, int height);
     ~Player();
 
     void handleInput(const SDL_Event& event);
@@ -19,4 +19,5 @@ private:
     bool keys[4];
     int x, y;
     int speed;
+    int width, height;
 };

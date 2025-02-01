@@ -15,7 +15,7 @@ bool Game::init(const char* title, int width, int height) {
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) return false;
 
-    player = new Player(renderer);
+    player = new Player(renderer, width, height);
     return (running = true);
 }
 
