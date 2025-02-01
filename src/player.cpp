@@ -22,6 +22,14 @@ void Player::handleInput(const SDL_Event& event) {
             case SDLK_d: keys[3] = 1; break;
         }
     }
+    else if(event.type == SDL_KEYUP){
+        switch (event.key.keysym.sym) {
+            case SDLK_w: keys[0] = 0; break;
+            case SDLK_s: keys[1] = 0; break;
+            case SDLK_a: keys[2] = 0; break;
+            case SDLK_d: keys[3] = 0; break;
+        }
+    }
 }
 
 void Player::update() {

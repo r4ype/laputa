@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include "player.h"
+#include "enemy.h"
 
 class Game {
 public:
@@ -15,10 +16,12 @@ private:
     void handleEvents();
     void update();
     void render();
+    int enemyNumbers = 2;
 
     bool running;
     SDL_Window* window;
     SDL_Renderer* renderer;
     Player* player;
+    Enemy* enemies = new Enemy[enemyNumbers];
 };
 

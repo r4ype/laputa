@@ -8,7 +8,7 @@ CXXFLAGS = -Iinclude `pkg-config --cflags sdl2 SDL2_image`
 LIBS = -lSDL2 -lSDL2_image `pkg-config --libs sdl2 SDL2_image`
 
 # Define source files and object files
-SRCS = src/game.cpp src/main.cpp src/player.cpp src/texture_manager.cpp
+SRCS = src/game.cpp src/main.cpp src/player.cpp src/texture_manager.cpp src/enemy.cpp
 OBJS = $(SRCS:src/%.cpp=src/%.o)
 
 # Define target executable
