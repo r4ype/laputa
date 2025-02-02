@@ -7,7 +7,6 @@ pkgs.mkShell {
     pkgs.pkg-config
     pkgs.SDL2
     pkgs.SDL2_image
-    pkgs.clang-tools
   ];
 
   shellHook = ''
